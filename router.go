@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/fortytw2/autohttp/internal/httpsnoop"
@@ -13,29 +13,22 @@ import (
 )
 
 type embeddedAssets struct {
-	indexBytes []byte
-	staticDir  fs.FS
+	staticDir fs.FS
 }
 
-func newEmbeddedAssets(assets fs.FS, htmlPath string, staticDir string) (*embeddedAssets, error) {
-	file, err := assets.Open(htmlPath)
+func newEmbeddedAssets(assets fs.FS, distDir string) (*embeddedAssets, error) {
+	staticFS, err := fs.Sub(assets, distDir)
 	if err != nil {
 		return nil, err
 	}
 
-	indexHTMLBytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
-	staticFS, err := fs.Sub(assets, staticDir)
-	if err != nil {
-		return nil, err
-	}
+	fs.WalkDir(staticFS, "/", func(path string, d fs.DirEntry, err error) error {
+		log.Printf("test: %s", path)
+		return nil
+	})
 
 	return &embeddedAssets{
-		indexBytes: indexHTMLBytes,
-		staticDir:  staticFS,
+		staticDir: staticFS,
 	}, nil
 }
 
@@ -66,9 +59,9 @@ func EnableRouteMetrics(r *Router) error {
 	return nil
 }
 
-func WithEmbeddedAssets(assets fs.FS, indexHTMLPath string, staticDirPath string) func(r *Router) error {
+func WithEmbeddedAssets(assets fs.FS, path string) func(r *Router) error {
 	return func(r *Router) error {
-		ea, err := newEmbeddedAssets(assets, indexHTMLPath, staticDirPath)
+		ea, err := newEmbeddedAssets(assets, path)
 		if err != nil {
 			return err
 		}
