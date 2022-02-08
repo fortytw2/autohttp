@@ -1,4 +1,4 @@
-package httpz
+package autohttp
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 // etc
 type Middleware interface {
 	// Before can modify an incoming request in the middleware chain
-	Before(r *http.Request, h *Autoroute) error
+	Before(r *http.Request, h *Handler) error
 }
 
 type MiddlewareError struct {
@@ -26,7 +26,7 @@ func (mwe MiddlewareError) Error() string {
 
 // SignedHeadersMiddleware validates that all incoming headers are signed using a certain key
 // if they're set as a header outgoing, they'll also be signed on the way out.
-// this works great for cookies.
+// this works great for cookies and the like
 type SignedHeadersMiddleware struct {
 	ks      *keysigner.KeySigner
 	headers []string
@@ -41,7 +41,7 @@ func NewSignedHeadersMiddleware(headers []string, key string) *SignedHeadersMidd
 	}
 }
 
-func (shm *SignedHeadersMiddleware) Before(r *http.Request, h *Autoroute) error {
+func (shm *SignedHeadersMiddleware) Before(r *http.Request, h *Handler) error {
 	for _, h := range shm.headers {
 		hVal := r.Header.Get(h)
 
@@ -78,7 +78,7 @@ func NewBasicAuthMiddleware(user, pwd string) *BasicAuthMiddleware {
 	}
 }
 
-func (bam *BasicAuthMiddleware) Before(r *http.Request, h *Autoroute) error {
+func (bam *BasicAuthMiddleware) Before(r *http.Request, h *Handler) error {
 	uname, pwd, ok := r.BasicAuth()
 	if !ok {
 		return MiddlewareError{

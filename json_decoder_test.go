@@ -1,4 +1,4 @@
-package httpz
+package autohttp
 
 import (
 	"context"
@@ -168,7 +168,7 @@ func TestJSONDecoder(t *testing.T) {
 		testFlag = false
 
 		t.Run(c.Name, func(t *testing.T) {
-			ar, err := NewAutoroute(lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)), NewJSONDecoder(), NoOpEncoder{}, c.Fn)
+			ar, err := NewHandler(lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)), NewJSONDecoder(), NoOpEncoder{}, DefaultErrorHandler, c.Fn)
 			if err != nil {
 				t.Fatal(err)
 			}

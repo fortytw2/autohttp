@@ -1,4 +1,4 @@
-package httpz
+package autohttp
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"github.com/fortytw2/lounge"
 )
 
-func TestAutoroute(t *testing.T) {
+func TestHandler(t *testing.T) {
 	mapReturnFn := func(ctx context.Context, input struct {
 		Name string
 	}) map[string]string {
@@ -62,7 +62,7 @@ func TestAutoroute(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			ar, err := NewAutoroute(lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)), NewJSONDecoder(), &JSONEncoder{}, c.Fn)
+			ar, err := NewHandler(lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)), NewJSONDecoder(), &JSONEncoder{}, DefaultErrorHandler, c.Fn)
 			if err != nil {
 				t.Fatal(err)
 			}

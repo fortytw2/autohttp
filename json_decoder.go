@@ -1,4 +1,4 @@
-package httpz
+package autohttp
 
 import (
 	"encoding/json"

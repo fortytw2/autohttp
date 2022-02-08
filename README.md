@@ -1,7 +1,7 @@
-httpz
+autohttp
 ======
 
-automatic http routes, handlers, and workflows.
+functions in, http out.
 
 ### Features
 

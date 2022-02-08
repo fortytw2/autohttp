@@ -1,4 +1,4 @@
-package httpz
+package autohttp
 
 import (
 	"encoding/json"
@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	ErrTooManyInputArgs    = errors.New("autoroute: too many input args")
-	ErrTooManyReturnValues = errors.New("autoroute: too many return values")
+	ErrTooManyInputArgs    = errors.New("autohttp: too many input args")
+	ErrTooManyReturnValues = errors.New("autohttp: too many return values")
 )
 
 // 65536
@@ -32,8 +32,8 @@ type Decoder interface {
 
 type Encoder interface {
 	ValidateType(x interface{}) error
-	// Encode cannot write a status code, this is reserved for autoroute itself to control
-	// to limit duplicate WriteHeader calls
+	// Encode cannot write a status code, this is reserved for autohttp to control
+	// preventing duplicate WriteHeader calls
 	Encode(values interface{}, hw HeaderWriter) (int, io.Reader, error)
 }
 
@@ -56,8 +56,8 @@ func DefaultErrorHandler(w http.ResponseWriter, err error) {
 	})
 }
 
-// An Autoroute is an http.Handler generated from any function
-type Autoroute struct {
+// An Handler is an http.Handler generated from any function
+type Handler struct {
 	fn  interface{}
 	log lounge.Log
 
@@ -68,12 +68,13 @@ type Autoroute struct {
 	hideFromIntrospectors bool
 }
 
-func NewAutoroute(
+func NewHandler(
 	log lounge.Log,
 	decoder Decoder,
 	encoder Encoder,
+	errorHandler ErrorHandler,
 	fn interface{},
-) (*Autoroute, error) {
+) (*Handler, error) {
 	if decoder == nil || encoder == nil {
 		return nil, errors.New("a decoder and encoder must be supplied. use httpz.NoOpDecoder")
 	}
@@ -93,7 +94,7 @@ func NewAutoroute(
 		return nil, errors.New("a function can only have up to 2 return values")
 	}
 
-	return &Autoroute{
+	return &Handler{
 		fn:                    fn,
 		encoder:               encoder,
 		decoder:               decoder,
@@ -102,7 +103,7 @@ func NewAutoroute(
 	}, nil
 }
 
-func (ar *Autoroute) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// handle panics
 	defer func() {
 		if r := recover(); r != nil {
@@ -110,15 +111,15 @@ func (ar *Autoroute) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	callValues, err := ar.decoder.Decode(ar.fn, r)
+	callValues, err := h.decoder.Decode(h.fn, r)
 	if err != nil {
 		// encode the parsing error cleanly
-		ar.errorHandler(w, err)
+		h.errorHandler(w, err)
 		return
 	}
 
 	// call the handler function using reflection
-	returnValues := reflect.ValueOf(ar.fn).Call(callValues)
+	returnValues := reflect.ValueOf(h.fn).Call(callValues)
 
 	// split out the error value and the return value
 	var encodableValue interface{} = nil
@@ -126,21 +127,21 @@ func (ar *Autoroute) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if isErrorType(rv.Type()) && !rv.IsNil() {
 			err = rv.Interface().(error)
 			// encode the parsing error cleanly
-			ar.errorHandler(w, err)
+			h.errorHandler(w, err)
 			return
 		} else {
 			encodableValue = rv.Interface()
 		}
 	}
 
-	responseCode, body, err := ar.encoder.Encode(encodableValue, w.Header().Set)
+	responseCode, body, err := h.encoder.Encode(encodableValue, w.Header().Set)
 	if err != nil {
-		ar.errorHandler(w, err)
+		h.errorHandler(w, err)
 	} else {
 		w.WriteHeader(responseCode)
 		_, err = io.Copy(w, body)
 		if err != nil {
-			ar.log.Errorf("error copying response body to writer: %s", err)
+			h.log.Errorf("error copying response body to writer: %s", err)
 		}
 	}
 }
