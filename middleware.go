@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/fortytw2/httpz/internal/keysigner"
+	"github.com/fortytw2/autohttp/internal/keysigner"
 )
 
 // Middleware is used for things such as authentication / authorization controls

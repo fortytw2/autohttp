@@ -1,4 +1,4 @@
-module github.com/fortytw2/httpz
+module github.com/fortytw2/autohttp
 
 go 1.17
 

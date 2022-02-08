@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/fortytw2/httpz/internal/httpsnoop"
+	"github.com/fortytw2/autohttp/internal/httpsnoop"
 	"github.com/fortytw2/lounge"
 )
 
