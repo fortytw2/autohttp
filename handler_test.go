@@ -23,6 +23,15 @@ func TestHandler(t *testing.T) {
 		return map[string]string{"test": "awooo"}
 	}
 
+	mapErrorReturnFn := func(ctx context.Context, input struct {
+		Name string
+	}) (map[string]string, error) {
+		if input.Name == "test" {
+			return map[string]string{"test": "booo"}, nil
+		}
+		return map[string]string{"test": "awooo"}, nil
+	}
+
 	cases := []struct {
 		Name         string
 		Fn           interface{}
@@ -54,6 +63,13 @@ func TestHandler(t *testing.T) {
 		{
 			"only-struct",
 			mapReturnFn,
+			strings.NewReader(`{"Name": "test"}`),
+			http.StatusOK,
+			`{"test":"booo"}`,
+		},
+		{
+			"both-error-and-struct",
+			mapErrorReturnFn,
 			strings.NewReader(`{"Name": "test"}`),
 			http.StatusOK,
 			`{"test":"booo"}`,

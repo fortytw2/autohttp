@@ -124,12 +124,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// split out the error value and the return value
 	var encodableValue interface{} = nil
 	for _, rv := range returnValues {
-		if isErrorType(rv.Type()) && !rv.IsNil() {
+		if isErrorType(rv.Type()) && !rv.IsNil() && !rv.IsZero() {
 			err = rv.Interface().(error)
 			// encode the parsing error cleanly
 			h.errorHandler(w, err)
 			return
-		} else {
+		} else if !isErrorType(rv.Type()) {
 			encodableValue = rv.Interface()
 		}
 	}
