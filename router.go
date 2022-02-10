@@ -159,20 +159,20 @@ func (r *Router) internalServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	routes, ok := r.Routes[req.URL.Path]
-	if !ok {
-		r.serveNotFound(w, req)
-		r.cleanLeftovers(req)
-		return
-	}
-
-	route, ok := routes[req.Method]
+	routes, ok := r.Routes[req.Method]
 	if !ok {
 		if req.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 
+		r.serveNotFound(w, req)
+		r.cleanLeftovers(req)
+		return
+	}
+
+	route, ok := routes[req.URL.Path]
+	if !ok {
 		r.serveNotFound(w, req)
 		r.cleanLeftovers(req)
 		return
