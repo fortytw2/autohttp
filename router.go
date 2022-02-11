@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
 	"net/http"
+	"strings"
 
 	"github.com/fortytw2/autohttp/internal/httpsnoop"
 	"github.com/fortytw2/lounge"
@@ -21,11 +21,6 @@ func newEmbeddedAssets(assets fs.FS, distDir string) (*embeddedAssets, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fs.WalkDir(staticFS, "/", func(path string, d fs.DirEntry, err error) error {
-		log.Printf("test: %s", path)
-		return nil
-	})
 
 	return &embeddedAssets{
 		staticDir: staticFS,
@@ -159,9 +154,10 @@ func (r *Router) internalServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	routes, ok := r.Routes[req.Method]
+	method := strings.ToUpper(req.Method)
+	routes, ok := r.Routes[method]
 	if !ok {
-		if req.Method != http.MethodGet {
+		if method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
