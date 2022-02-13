@@ -15,25 +15,13 @@ func (nfs indexOnNotFoundFS) Open(path string) (fs.File, error) {
 	f, err := nfs.fs.Open(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return nfs.returnIndexHTML()
+			return nfs.fs.Open("index.html")
 		}
 
 		return nil, err
 	}
 
-	s, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
-	if s.IsDir() {
-		return nfs.returnIndexHTML()
-	}
-
 	return f, nil
-}
-
-func (nfs indexOnNotFoundFS) returnIndexHTML() (fs.File, error) {
-	return nfs.fs.Open("index.html")
 }
 
 func (r *Router) serveNotFound(w http.ResponseWriter, req *http.Request) {
