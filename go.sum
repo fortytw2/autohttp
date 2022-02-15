@@ -1,2 +1,4 @@
 github.com/fortytw2/lounge v0.0.0-20210929174603-b7ce694cb600 h1:KyvTnqj+pFkGOJgurGRbnoIo9cMtLFS5BsFPQXqt0ZM=
 github.com/fortytw2/lounge v0.0.0-20210929174603-b7ce694cb600/go.mod h1:UF4a8fQkS6tEHH83nmLd9BXrFRmZmPQAAmogV1irsGU=
+github.com/fortytw2/lounge v0.0.0-20211222193458-766d5beb419b h1:AbV9+Whd7AyhWI/xcHXB+j8Ps2N7Unt04U+zUodKhdM=
+github.com/fortytw2/lounge v0.0.0-20211222193458-766d5beb419b/go.mod h1:UF4a8fQkS6tEHH83nmLd9BXrFRmZmPQAAmogV1irsGU=
