@@ -28,7 +28,8 @@ func newEmbeddedAssets(assets fs.FS, distDir string) (*embeddedAssets, error) {
 }
 
 type Router struct {
-	Routes map[string]map[string]*Handler
+	Routes     map[string]map[string]http.Handler
+	starRoutes map[string]http.Handler
 
 	embeddedAssets *embeddedAssets
 
@@ -93,7 +94,7 @@ var DefaultOptions = []RouterOption{
 }
 
 func NewRouter(log lounge.Log, routerOptions ...RouterOption) (*Router, error) {
-	r := &Router{log: log, Routes: make(map[string]map[string]*Handler)}
+	r := &Router{log: log, Routes: make(map[string]map[string]http.Handler), starRoutes: make(map[string]http.Handler)}
 	for _, ro := range append(DefaultOptions, routerOptions...) {
 		err := ro(r)
 		if err != nil {
@@ -114,18 +115,30 @@ var validMethods = map[string]bool{
 }
 
 func (r *Router) Register(method string, path string, fn interface{}) error {
+	if strings.Contains(path, "*") {
+		if httpHandler, ok := fn.(http.Handler); ok {
+			r.starRoutes[path] = httpHandler
+			return nil
+		}
+	}
+
 	if ok := validMethods[method]; !ok {
 		return fmt.Errorf("invalid http method: %s", method)
 	}
 
 	_, ok := r.Routes[method]
 	if !ok {
-		r.Routes[method] = make(map[string]*Handler)
+		r.Routes[method] = make(map[string]http.Handler)
 	}
 
 	_, ok = r.Routes[method][path]
 	if ok {
 		return errors.New("route already registered")
+	}
+
+	if httpHandler, ok := fn.(http.Handler); ok {
+		r.Routes[method][path] = httpHandler
+		return nil
 	}
 
 	h, err := NewHandler(r.log, r.defaultDecoder, r.defaultEncoder, r.defaultErrorHandler, fn)
@@ -152,6 +165,14 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (r *Router) internalServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodOptions {
 		return
+	}
+
+	for path, handler := range r.starRoutes {
+		pathPrefix := strings.ReplaceAll(path, "*", "")
+		if strings.HasPrefix(req.URL.Path, pathPrefix) {
+			handler.ServeHTTP(w, req)
+			return
+		}
 	}
 
 	method := strings.ToUpper(req.Method)
