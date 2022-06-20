@@ -168,7 +168,13 @@ func TestJSONDecoder(t *testing.T) {
 		testFlag = false
 
 		t.Run(c.Name, func(t *testing.T) {
-			ar, err := NewHandler(lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)), NewJSONDecoder(), NoOpEncoder{}, DefaultErrorHandler, c.Fn)
+			ar, err := NewHandler(
+				lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)),
+				NewJSONDecoder(),
+				NoOpEncoder{},
+				[]Middleware{},
+				DefaultErrorHandler,
+				c.Fn)
 			if err != nil {
 				t.Fatal(err)
 			}

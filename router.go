@@ -141,7 +141,7 @@ func (r *Router) Register(method string, path string, fn interface{}) error {
 		return nil
 	}
 
-	h, err := NewHandler(r.log, r.defaultDecoder, r.defaultEncoder, r.defaultErrorHandler, fn)
+	h, err := NewHandler(r.log, r.defaultDecoder, r.defaultEncoder, []Middleware{}, r.defaultErrorHandler, fn)
 	if err != nil {
 		return err
 	}

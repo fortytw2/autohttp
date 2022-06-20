@@ -64,6 +64,7 @@ type Handler struct {
 	encoder      Encoder
 	decoder      Decoder
 	errorHandler ErrorHandler
+	middlewares  []Middleware
 
 	hideFromIntrospectors bool
 }
@@ -72,6 +73,7 @@ func NewHandler(
 	log lounge.Log,
 	decoder Decoder,
 	encoder Encoder,
+	middlewares []Middleware,
 	errorHandler ErrorHandler,
 	fn interface{},
 ) (*Handler, error) {
@@ -99,6 +101,7 @@ func NewHandler(
 		encoder:               encoder,
 		decoder:               decoder,
 		errorHandler:          DefaultErrorHandler,
+		middlewares:           middlewares,
 		hideFromIntrospectors: false,
 	}, nil
 }
@@ -110,6 +113,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "panic in route execution: %v", r)
 		}
 	}()
+
+	for _, mw := range h.middlewares {
+		err := mw.Before(r, h)
+		if err != nil {
+			h.errorHandler(w, err)
+			return
+		}
+	}
 
 	callValues, err := h.decoder.Decode(h.fn, r)
 	if err != nil {

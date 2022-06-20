@@ -78,7 +78,13 @@ func TestHandler(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
-			ar, err := NewHandler(lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)), NewJSONDecoder(), &JSONEncoder{}, DefaultErrorHandler, c.Fn)
+			ar, err := NewHandler(
+				lounge.NewDefaultLog(lounge.WithOutput(os.Stderr)),
+				NewJSONDecoder(),
+				&JSONEncoder{},
+				[]Middleware{},
+				DefaultErrorHandler,
+				c.Fn)
 			if err != nil {
 				t.Fatal(err)
 			}
