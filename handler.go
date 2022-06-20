@@ -117,13 +117,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, mw := range h.middlewares {
 		err := mw.Before(r, h)
 		if err != nil {
-			mwe, ok := err.(MiddlewareError)
-			if ok {
-				w.WriteHeader(mwe.StatusCode)
-			} else {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-
 			h.errorHandler(w, err)
 			return
 		}
